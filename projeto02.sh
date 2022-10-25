@@ -2,7 +2,6 @@
 
 nomeArq='site-dio'
 apacheDir='/var/www/html'
-arqSec=''
 
 echo "============================ ATUALIZANDO O SERVIDOR ============================"
 apt-get update $$ apt-get upgrade -y
@@ -23,5 +22,5 @@ cd $nomeArq
 nomeArq=`ls`
 cp -r $nomeArq/* $apacheDir
 cp -r $nomeArq $apacheDir
-echo "lolo <3 bb fofo"
+
 systemcl restart apache2
