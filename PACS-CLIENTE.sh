@@ -118,15 +118,6 @@ cp -vfr /usr/java/jai_imageio-1_1/lib/libclib_jiio.so /opt/pacs/dcm4chee/bin/nat
 #setar permissão geral do diretorio de instalação do dcm
 chmod -R 777 /opt/pacs/
 
-################################################################
-### CRIAR DIRETORIOS PARA STORAGE E FONTE DO SISTEMA MLAUDOS ###
-################################################################
-echo -e "\n "$vermelho" CRIANDO DIRETÓRIOS DE STORAGE E FONTE SISTEMA MLAUDOS "$branco" \n";
-#atualizar biblioteca para sistema 64bits
-mkdir -vp /STORAGE/
-mkdir -vp /MLAUDOS/${VAR_NOME_CLIENTES}
-
-
 #!/bin/bash
 
 #####################################################################
@@ -136,30 +127,23 @@ read -p "DIGITE O IP DO SERVIDOR DE DOMÍNIO: " VAR_IP_DC_LOCAL
 read -p "DIGITE O DOMINIO LOCAL: " VAR_DOMINIO
 read -p "DIGITE O APENAS O HOSTNAME DO SERVIDOR DE DOMÍNIO: " VAR_HOSTNAME_DC
 
-#####################################################################
-###    VARIÁVEIS COM INFORMAÇÕES DO SERVIDOR DE ARQUIVOS LOCAL    ###
-#####################################################################
-read -p "DIGITE O IP DO SERVIDOR DE ARQUIVOS: " VAR_IP_FS_LOCAL
-read -p "DIGITE O APENAS O HOSTNAME DO SERVIDOR DE ARQUIVOS: " VAR_HOSTNAME_FS
+################################################################
+### CRIAR DIRETORIOS PARA STORAGE E FONTE DO SISTEMA MLAUDOS ###
+################################################################
+echo -e "\n "$vermelho" CRIANDO DIRETÓRIOS DE STORAGE E FONTE SISTEMA MLAUDOS "$branco" \n";
+#atualizar biblioteca para sistema 64bits
+mkdir -vp /STORAGE/
 
 #####################################################################
 ### ADICIONAR SERVIDORES DE ARQUIVO E DOMINIO AO ARQUIVO DE HOSTS ###
 #####################################################################
 echo "${VAR_IP_DC_LOCAL}     ${VAR_HOSTNAME_DC}"."${VAR_DOMINIO_CLIENTE}      ${VAR_HOSTNAME_DC}" >> /etc/hosts
-echo "${VAR_IP_FS_LOCAL}     ${VAR_HOSTNAME_FS}"."${VAR_DOMINIO_CLIENTE}      ${VAR_HOSTNAME_FS}" >> /etc/hosts
 
-########################################################################
-### VARIÁVEL DO PATH DE ARQUIVOS DO STORAGE DO SERVIDOR DE ARQUIVOS  ###
-########################################################################
-read -p "DIGITE O PATH DO COMPARTILHAMENTO A SER MONTADO NO SERVIDOR PACS" VAR_PATH_FS
-
-###############################################################
-### MONTAR DIRETORIOS DE STORAGE E FONTE DO SISTEMA MLAUDOS ###
-###############################################################
-echo -e "\n "$vermelho" MAPEANDO DIRETORIOS DE STORAGE E SISTEMA MLAUDOS "$branco" \n";
-#montar diretorio storage
-mount -vt cifs -o vers=2.0 ${VAR_PATH_FS}$ /STORAGE/ -o user=${VAR_USER_CLIENTE},domain=${VAR_DOMINIO_CLIENTE},password=${VAR_PASS_CLIENTE},file_mode=0777,dir_mode=0777
-echo
+#####################################################################
+###                  MONTAR PARTIÇÃO FÍSICA ext4                  ###
+#####################################################################
+echo -e "\n "$vermelho" MONTANDO DISCO STORAGE PACS dcm4chee "$branco" \n";
+mount /dev/sdb1 /STORAGE
 
 #######################################################################
 ###   PREPARAR ARQUIVOS PARA INICIALIZAÇÃO AUTOMÁTICA DOS SERVIÇOS  ###
@@ -179,13 +163,7 @@ cat > /etc/rc.local << EOF
 
 export JAVA_HOME=/usr/java/jdk1.7.0_80/
 export PATH=$PATH:/usr/java/jre1.7.0_80/bin
-#montar diretorio storage
-mount -t cifs -o vers=2.0 //ZEUS/PACS-${VAR_NOME_CLIENTE}$ /STORAGE/ -o user=${VAR_USER_CLIENTE},domain=${VAR_DOMINIO_CLIENTE},password=${VAR_PASS_CLIENTE},file_mode=0777,dir_mode=0777
-#montar diretorio fonte sistema
-mount -t cifs -o vers=2.0 //ZEUS/${VAR_NOME_CLIENTE}$ /MLAUDOS/${VAR_NOME_CLIENTE} -o user=${VAR_USER_CLIENTE},domain=${VAR_DOMINIO_CLIENTE},password=${VAR_PASS_CLIENTE},file_mode=0777,dir_mode=0777
-
 /etc/init.d/rundcm4chee.sh start
-
 exit 0
 EOF
 
@@ -201,5 +179,6 @@ echo -e "\n "$vermelho" INSTALAÇÃO DCM4CHEE CONCLUÍDA COM SUCESSO "$branco" \
 echo -e "\n "$vermelho" NECESSÁRIO CONFIGURAR "$amarelo" JMX-CONSOLE "$vermelho" PARA CONCLUIR A INSTALAÇÃO "$branco" \n";
 echo -e "\n "$amarelo" REINICIANDO SERVIDOR "$branco" \n";
 sleep 5
+
 
 init 6
